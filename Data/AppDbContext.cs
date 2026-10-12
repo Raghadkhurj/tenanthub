@@ -10,6 +10,15 @@ public class AppDbContext:DbContext{
     }
      public DbSet<User> Users{get;set;}
    public DbSet<Tenant> Tenants{get;set;}
-
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    modelBuilder.Entity<Tenant>()
+        .HasIndex(t => t.Slug)
+        .IsUnique();
+    
+    modelBuilder.Entity<User>()
+    .HasIndex(u =>new{ u.Email,u.TenantId})
+    .IsUnique();
+}
 }
 }
