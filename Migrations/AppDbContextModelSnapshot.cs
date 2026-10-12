@@ -22,6 +22,30 @@ namespace TenantHub.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("TenantHub.Models.Admin", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("Admins");
+                });
+
             modelBuilder.Entity("TenantHub.Models.Tenant", b =>
                 {
                     b.Property<int>("Id")
@@ -44,6 +68,20 @@ namespace TenantHub.Migrations
                         .IsUnique();
 
                     b.ToTable("Tenants");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Innovation grid",
+                            Slug = "innovation-grid"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Orange Company",
+                            Slug = "orange-company"
+                        });
                 });
 
             modelBuilder.Entity("TenantHub.Models.User", b =>
