@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using TenantHub.Data;
+DotNetEnv.Env.Load();
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-DotNetEnv.Env.Load();
 builder.Services.AddControllers();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
