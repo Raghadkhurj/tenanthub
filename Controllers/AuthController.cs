@@ -6,6 +6,7 @@ using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TenantHub.Controllers {
     [ApiController]
@@ -90,4 +91,31 @@ namespace TenantHub.Controllers {
             signingCredentials: creds);
 
         return Ok(new { token = new JwtSecurityTokenHandler().WriteToken(token) });
-    }}}
+    }
+   [HttpGet("/current-user")]
+   [Authorize(Roles = "User")]
+    public async Task<IActionResult> GetCurrentUser()
+    {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        var tenantId = int.Parse(User.FindFirst("TenantId")!.Value);
+
+        var user = await _context.Users
+            .Include(u => u.Tenant)
+            .FirstOrDefaultAsync(u => u.Id == userId && u.TenantId == tenantId);
+
+        if (user == null)
+        {
+            return Unauthorized();
+        }
+
+        return Ok(new
+        {
+            user.Id,
+            user.Email,
+            user.CreatedDate,
+            Tenant = new { user.Tenant.Id, user.Tenant.Name, user.Tenant.Slug }
+        });
+    }
+
+   }
+}
