@@ -2,16 +2,23 @@ using Microsoft.AspNetCore.Mvc;
 using TenantHub.Data;
 using TenantHub.Dtos;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace TenantHub.Controllers {
     [ApiController]
     [Route ("[controller]")]
 
     public class AuthController: ControllerBase{
-
+          private readonly IConfiguration _config;
+        
         private readonly AppDbContext _context;
-        public AuthController(AppDbContext context){
+        public AuthController(AppDbContext context,IConfiguration config){
             _context=context;
+             _config=config;
+
 
         }
         
@@ -27,8 +34,23 @@ namespace TenantHub.Controllers {
                 return Unauthorized("Invalid email or password ");
 
            }
-           return Ok("Login successful");
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, admin.Id.ToString()),
+            new Claim(ClaimTypes.Email, admin.Email),
+            new Claim(ClaimTypes.Role, "Admin")
+        };
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["JWT_KEY"]!));
+
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var token = new JwtSecurityToken(
+            claims: claims,
+            expires: DateTime.UtcNow.AddHours(1),
+            signingCredentials: creds);
+
+        return Ok(new { token = new JwtSecurityTokenHandler().WriteToken(token) });            }
             }
-    }
 
 }
