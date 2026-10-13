@@ -32,13 +32,14 @@ namespace TenantHub.Controllers {
             var user=new User
             {
                 Email=request.Email,
-                PasswordHash=BCrypt.Net.BCrypt.HashPassword(request.Password)
-,
+                PasswordHash=BCrypt.Net.BCrypt.HashPassword(request.Password),
                 TenantId=tenant.Id
             };
             _context.Users.Add(user);             
             await _context.SaveChangesAsync(); 
           return Ok(new { user.Id, user.Email, user.TenantId });
             }
+    
 
-    }}
+    }
+}

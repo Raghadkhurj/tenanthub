@@ -50,7 +50,44 @@ namespace TenantHub.Controllers {
             expires: DateTime.UtcNow.AddHours(1),
             signingCredentials: creds);
 
-        return Ok(new { token = new JwtSecurityTokenHandler().WriteToken(token) });            }
-            }
+        return Ok(new { token = new JwtSecurityTokenHandler().WriteToken(token) 
+        });
+        }
+            
+        [HttpPost("user/login")]
+    public async Task<IActionResult> UserLogin(LoginRequest request)
+    {
+        var tenant = await _context.Tenants.FirstOrDefaultAsync(t => t.Slug == request.CompanySlug);
+        if (tenant == null)
+        {
+            return Unauthorized("Invalid email or password");
+        }
 
-}
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.TenantId == tenant.Id && u.Email == request.Email);
+        if (user == null)
+        {
+            return Unauthorized("Invalid email or password");
+        }
+
+        if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+        {
+            return Unauthorized("Invalid email or password");
+        }
+
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(ClaimTypes.Role, "User"),
+            new Claim("TenantId", user.TenantId.ToString())
+        };
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["JWT_KEY"]!));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var token = new JwtSecurityToken(
+            claims: claims,
+            expires: DateTime.UtcNow.AddHours(1),
+            signingCredentials: creds);
+
+        return Ok(new { token = new JwtSecurityTokenHandler().WriteToken(token) });
+    }}}
