@@ -29,6 +29,7 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
         new Tenant{Id=2,Name="Orange Company",Slug="orange-company"}
 
     );
+
 }    
 
 }
