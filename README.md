@@ -21,6 +21,7 @@ Each company has its own users, and users can only see their own company's data.
  Body: `email`, `password`, `companySlug` (`innovation-grid` or `orange-company`).
 - User login → `POST /auth/user/login`with `email`, `password`, `companySlug`. Copy the returned token.
 - Current user → GET /current-user (with user token)`GET /current-user` with the user token ,returns the user and their company only.
+- Login page → open `/login.html` in the browser. After a successful login, the user is redirected to a blank home page.
 
 
 Automated tests will be added later and run with:
