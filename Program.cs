@@ -34,6 +34,7 @@ var app = builder.Build();
     using (var scope = app.Services.CreateScope())
     {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await db.Database.MigrateAsync();
     var email = builder.Configuration["ADMIN_EMAIL"];
     var password = builder.Configuration["ADMIN_PASSWORD"];
 
