@@ -49,8 +49,6 @@ var app = builder.Build();
     await db.SaveChangesAsync();
     }}
     
-app.UseDefaultFiles();
-app.UseStaticFiles();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
