@@ -1,4 +1,3 @@
-using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -32,17 +31,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-    if (!db.Admins.Any())
+    using (var scope = app.Services.CreateScope())
     {
-        db.Admins.Add(new Admin {Email = builder.Configuration["ADMIN_EMAIL"],
-        PasswordHash = BCrypt.Net.BCrypt.HashPassword(builder.Configuration["ADMIN_PASSWORD"]) });
-        await db.SaveChangesAsync();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var email = builder.Configuration["ADMIN_EMAIL"];
+    var password = builder.Configuration["ADMIN_PASSWORD"];
+
+    if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+    {
+        throw new InvalidOperationException("ADMIN_EMAIL and ADMIN_PASSWORD must be set in .env");
     }
-}
+
+    if (!await db.Admins.AnyAsync())
+    {
+     db.Admins.Add(new Admin { Email = email, PasswordHash = BCrypt.Net.BCrypt.HashPassword(password) });
+    await db.SaveChangesAsync();
+    }}
     
 app.UseDefaultFiles();
 app.UseStaticFiles();
