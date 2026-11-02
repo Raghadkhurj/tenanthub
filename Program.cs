@@ -11,8 +11,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
  var tokenService= new JwtTokenService(builder.Configuration);
+
  builder.Services.AddSingleton(tokenService);
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -29,6 +30,25 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+var frontendOrigin = builder.Configuration["FRONTEND_ORIGIN"];
+if (string.IsNullOrWhiteSpace(frontendOrigin))
+{
+    throw new InvalidOperationException("FRONTEND_ORIGIN is missing!");
+}
+
+var  AngularApp="_angularApp";
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: AngularApp,
+                      policy  =>
+                      {
+                          policy.WithOrigins(frontendOrigin)
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                      });
+});
 
 var app = builder.Build();
     using (var scope = app.Services.CreateScope())
@@ -48,14 +68,15 @@ var app = builder.Build();
      db.Admins.Add(new Admin { Email = email, PasswordHash = BCrypt.Net.BCrypt.HashPassword(password) });
     await db.SaveChangesAsync();
     }}
+ 
     
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
-
 app.UseHttpsRedirection();
+app.UseCors(AngularApp);
 app.UseAuthentication();
 app.UseAuthorization();
 
