@@ -11,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddDbContext<AppDbContext>(options =>
-options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
  var tokenService= new JwtTokenService(builder.Configuration);
 
  builder.Services.AddSingleton(tokenService);
@@ -37,11 +37,11 @@ if (string.IsNullOrWhiteSpace(frontendOrigin))
     throw new InvalidOperationException("FRONTEND_ORIGIN is missing!");
 }
 
-var  AngularApp="_angularApp";
+var angularPolicy="AngularApp";
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(name: AngularApp,
+    options.AddPolicy(name: angularPolicy,
                       policy  =>
                       {
                           policy.WithOrigins(frontendOrigin)
@@ -68,7 +68,6 @@ var app = builder.Build();
      db.Admins.Add(new Admin { Email = email, PasswordHash = BCrypt.Net.BCrypt.HashPassword(password) });
     await db.SaveChangesAsync();
     }}
- 
     
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -76,7 +75,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 app.UseHttpsRedirection();
-app.UseCors(AngularApp);
+app.UseCors(angularPolicy);
 app.UseAuthentication();
 app.UseAuthorization();
 
