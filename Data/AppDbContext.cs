@@ -11,7 +11,8 @@ public class AppDbContext:DbContext{
      public DbSet<User> Users{get;set;}
      public DbSet<Tenant> Tenants{get;set;}
      public DbSet<Admin> Admins{get;set;}
-
+     public DbSet<Project> Projects{get;set;}
+     
 protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
     modelBuilder.Entity<Tenant>()
@@ -29,6 +30,16 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
         new Tenant{Id=2,Name="Orange Company",Slug="orange-company"}
 
     );
+    modelBuilder.Entity<Project>()
+    .Property(u=>u.Name)
+    .HasMaxLength(100);
+     modelBuilder.Entity<Project>()
+    .Property(u=>u.Description)
+    .HasMaxLength(500);
+    modelBuilder.Entity<Project>()
+    .HasIndex(u=>new {u.Name,u.TenantId})
+    .IsUnique();
+    
 
 }    
 
