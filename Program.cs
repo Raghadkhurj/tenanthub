@@ -15,6 +15,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
  var tokenService= new JwtTokenService(builder.Configuration);
 
  builder.Services.AddSingleton(tokenService);
+ builder.Services.AddScoped<ProjectService>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
