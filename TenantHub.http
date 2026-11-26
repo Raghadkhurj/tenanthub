@@ -1,6 +1,141 @@
-@TenantHub_HostAddress = http://localhost:5053
+@host = http://localhost:5053
+ 
+### 1. Admin login (reads email and password from your .env)
+# @name adminLogin
+POST {{host}}/auth/admin/login
+Content-Type: application/json
+{
+"email": "{{$dotenv ADMIN_EMAIL}}",
+"password": "{{$dotenv ADMIN_PASSWORD}}"
+}
+### 2. Create user A in innovation-grid (409 if it already exists, that's OK)
+POST {{host}}/users
+Authorization: Bearer {{adminLogin.response.body.$.token}}
+Content-Type: application/json
 
-GET {{TenantHub_HostAddress}}/weatherforecast/
-Accept: application/json
+{
+  "email": "a@test.com",
+  "password": "Test1234!",
+  "companySlug": "innovation-grid"
+}
 
-###
+### 3. Create user B in orange-company (409 if it already exists, that's OK)
+POST {{host}}/users
+Authorization: Bearer {{adminLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "email": "b@test.com",
+  "password": "Test1234!",
+  "companySlug": "orange-company"
+}
+
+### 4. Login as user A
+# @name loginA
+POST {{host}}/auth/user/login
+Content-Type: application/json
+
+{
+  "email": "a@test.com",
+  "password": "Test1234!",
+  "companySlug": "innovation-grid"
+}
+
+### 5. Login as user B
+# @name loginB
+POST {{host}}/auth/user/login
+Content-Type: application/json
+
+{
+  "email": "b@test.com",
+  "password": "Test1234!",
+  "companySlug": "orange-company"
+}
+
+### 6. A creates a project. Expected: 201
+# @name createProject
+POST {{host}}/projects
+Authorization: Bearer {{loginA.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "name": "Website",
+  "description": "Company website",
+  "status": 1
+}
+
+### 7. A lists projects. Expected: 200, includes Website
+GET {{host}}/projects
+Authorization: Bearer {{loginA.response.body.$.token}}
+
+### 8. A gets the project. Expected: 200
+GET {{host}}/projects/{{createProject.response.body.$.id}}
+Authorization: Bearer {{loginA.response.body.$.token}}
+
+### 9. B gets A's project. Expected: 404
+GET {{host}}/projects/{{createProject.response.body.$.id}}
+Authorization: Bearer {{loginB.response.body.$.token}}
+
+### 10. B updates A's project. Expected: 404
+PUT {{host}}/projects/{{createProject.response.body.$.id}}
+Authorization: Bearer {{loginB.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "name": "Hacked",
+  "status": 0
+}
+
+### 11. B deletes A's project. Expected: 404
+DELETE {{host}}/projects/{{createProject.response.body.$.id}}
+Authorization: Bearer {{loginB.response.body.$.token}}
+
+### 12. A creates the same name again. Expected: 409
+POST {{host}}/projects
+Authorization: Bearer {{loginA.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "name": "Website",
+  "status": 0
+}
+
+### 13. A sends an empty name. Expected: 400
+POST {{host}}/projects
+Authorization: Bearer {{loginA.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "name": "",
+  "status": 0
+}
+
+### 14. B sends a tenantId in the body. Expected: 201, created in B's company anyway
+POST {{host}}/projects
+Authorization: Bearer {{loginB.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "name": "Sneaky",
+  "status": 0,
+  "tenantId": 1
+}
+
+### 15. A keeps the same name and changes the description. Expected: 200
+PUT {{host}}/projects/{{createProject.response.body.$.id}}
+Authorization: Bearer {{loginA.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "name": "Website",
+  "description": "New description",
+  "status": 2
+}
+
+### 16. A deletes the project. Expected: 204
+DELETE {{host}}/projects/{{createProject.response.body.$.id}}
+Authorization: Bearer {{loginA.response.body.$.token}}
+
+### 17. A gets it after delete. Expected: 404
+GET {{host}}/projects/{{createProject.response.body.$.id}}
+Authorization: Bearer {{loginA.response.body.$.token}}
